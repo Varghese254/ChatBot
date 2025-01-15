@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="chat-container">
+        <div id="chat-box" class="chat-box"></div>
+        <input type="text" id="user-input" placeholder="Type a message..." />
+        <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <script>
+        function appendMessage(sender, message) {
+            const chatBox = document.getElementById('chat-box');
+            const messageElement = document.createElement('div');
+            messageElement.classList.add(sender);
+
+            // Add "Bot:" or "You:" prefix for bot and user messages
+            if (sender === 'bot') {
+                messageElement.innerHTML = "<strong>Bot:</strong> " + message;
+            } else {
+                messageElement.innerHTML = "<strong>You:</strong> " + message;
+            }
+
+            chatBox.appendChild(messageElement);
+            chatBox.scrollTop = chatBox.scrollHeight;  // Scroll to the bottom
+        }
+
+        async function sendMessage() {
+            const userInput = document.getElementById('user-input').value;
+            if (userInput.trim() === '') return;
+
+            appendMessage('user', userInput);  // Show the user's message
+            document.getElementById('user-input').value = '';  // Clear input field
+
+            // Send the message to the Flask backend
+            const response = await fetch('/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ prompt: userInput })
+            });
+
+            const data = await response.json();
+            if (data.response) {
+                appendMessage('bot', data.response);  // Show the bot's response
+            } else {
+                appendMessage('bot', 'Sorry, I couldn\'t understand that.');
+            }
+        }
+    </script>
+</body>
+</html>
